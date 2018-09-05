@@ -1,8 +1,8 @@
 const express = require("express");
-const rootRouter = express.Router();
+const router = express.Router();
 const filmRouter = require("./filmRouter");
 const authRouter = require("./authRouter");
 
-rootRouter.use("/", filmRouter);
-rootRouter.use("/", authRouter);
-module.exports = rootRouter;
+router.use("/", filmRouter);
+router.use("/", authRouter);
+module.exports = router;

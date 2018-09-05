@@ -1,17 +1,19 @@
 const express = require("express");
-const authRouter = express.Router();
+const router = express.Router();
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const config = require("../../config/main");
 
-authRouter.post("/register", (req, res) => {
+router.post("/register", (req, res) => {
+  console.log(req.body);
   if (!req.body.email || !req.body.password) {
     res.json({ success: false, message: "Please enter email and password" });
   } else {
     const newUser = new User({
       email: req.body.email,
-      password: req.body.password
+      password: req.body.password,
+      username: req.body.username
     });
     console.log(newUser.email + " " + newUser.password);
 
@@ -19,21 +21,26 @@ authRouter.post("/register", (req, res) => {
     newUser.save(function(err) {
       if (err) {
         console.log(err.message);
-        return res.json({ success: false, message: err.message });
+        return res.json({
+          success: false,
+          message: "Email and Username must be unique"
+        });
+      } else {
+        const token = jwt.sign(newUser.toJSON(), config.secret, {
+          expiresIn: 86400
+        });
+        res.json({
+          success: true,
+          message: "new user added",
+          token: `JWT ${token}`,
+          user: newUser
+        });
       }
-      const token = jwt.sign(newUser.toJSON(), config.secret, {
-        expiresIn: 86400
-      });
-      res.json({
-        success: true,
-        message: "new user added",
-        token: `JWT ${token}`
-      });
     });
   }
 });
 
-authRouter.post("/auth", (req, res) => {
+router.post("/auth", (req, res) => {
   User.findOne({ email: req.body.email })
     .then(user => {
       if (!user) {
@@ -41,11 +48,10 @@ authRouter.post("/auth", (req, res) => {
       } else {
         user.comparePassword(req.body.password, function(err, isMatch) {
           if (isMatch && !err) {
-            console.log("sign user: " + user);
             const token = jwt.sign(user.toJSON(), config.secret, {
               expiresIn: 86400 //in seconds(equal to 1 day)
             });
-            res.json({ success: true, token: `JWT ${token}` });
+            res.json({ success: true, token: `JWT ${token}`, user });
           } else {
             res.json({ success: false, message: "Wrong password" });
           }
@@ -55,12 +61,13 @@ authRouter.post("/auth", (req, res) => {
     .catch(err => console.log(err.message));
 });
 
-authRouter.get(
+router.get(
   "/dashboard",
   passport.authenticate("jwt", { session: false }),
   function(req, res) {
     console.log("request user: " + req.user);
-    res.send(`It works! User id is: ${req.user._id}`);
+    res.json({ success: true, user: req.user });
+    // res.send(`It works! User id is: ${req.user._id}`);
   }
 );
-module.exports = authRouter;
+module.exports = router;

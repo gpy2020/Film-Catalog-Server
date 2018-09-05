@@ -1,9 +1,9 @@
 const express = require("express");
-const categoryRouter = express.Router();
+const router = express.Router();
 const Category = require("../models/filmCategory");
 const Film = require("../models/film");
 
-categoryRouter
+router
   .route("/")
   .get((req, res) => {
     Category.find({})
@@ -24,18 +24,26 @@ categoryRouter
     });
   });
 
-categoryRouter
-  .route("/:_id")
+router
+  .route("/:_id/:pageNumber")
   .get((req, res) => {
+    const pageSize = 12;
     Category.findById(req.params._id)
+      .limit(pageSize)
+      .skip(req.params.pageNumber * pageSize)
       .then(category => {
         Promise.all(
           category.films.map(filmID => {
             return Film.findById(filmID);
           })
-        ).then(films => {
-          res.json(films);
-        });
+        )
+          .then(films => {
+            res.json(films);
+            console.log(films);
+          })
+          .catch(err => {
+            res.send(err.message);
+          });
       })
       .catch(err => res.send(err));
   })
@@ -53,4 +61,4 @@ categoryRouter
       })
       .catch(err => res.send(err.message));
   });
-module.exports = categoryRouter;
+module.exports = router;
