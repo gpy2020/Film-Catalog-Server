@@ -7,11 +7,17 @@ router.use("/films/categories", categoryRouter);
 
 router.route("/films/pages/:pageNumber").get((req, res) => {
   const sortBy = req.query.sort;
+  const searchRequest = req.query.search;
+
+  console.log(sortBy);
+  console.log(`page: ${req.params.pageNumber}`);
   const pageSize = 12;
-  Film.find({})
+  Film.find(
+    searchRequest ? { title: { $regex: new RegExp(searchRequest, "i") } } : {}
+  )
+    .sort(sortBy ? { [sortBy]: sortBy === "rating" ? -1 : 1 } : { title: 1 })
     .skip(pageSize * req.params.pageNumber)
     .limit(pageSize)
-    .sort(sortBy ? { sortBy: 1 } : { title: 1 })
     .then(films => {
       res.json(films);
     })
