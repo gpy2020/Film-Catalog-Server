@@ -32,6 +32,10 @@ const filmSchema = new mongoose.Schema({
   comments: {
     type: [{ user: String, comment: String }],
     required: true
+  },
+  marks: {
+    type: [{ user: String, mark: Number }],
+    required: true
   }
 });
 

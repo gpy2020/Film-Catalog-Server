@@ -2,8 +2,21 @@ const express = require("express");
 const router = express.Router();
 const Film = require("../models/film");
 const categoryRouter = require("./categoryRouter");
+const axios = require("axios");
 
 router.use("/films/categories", categoryRouter);
+
+router.route("/films/getRating").get((req, res) => {
+  axios.get("https://rating.kinopoisk.ru/3961.xml").then(response => {
+    res.send(response.data);
+  });
+});
+
+router.route("/films").get((req, res) => {
+  Film.find()
+    .sort({ title: 1 })
+    .then(films => res.json(films));
+});
 
 router.route("/films/pages/:pageNumber").get((req, res) => {
   const sortBy = req.query.sort;
@@ -11,7 +24,7 @@ router.route("/films/pages/:pageNumber").get((req, res) => {
 
   console.log(sortBy);
   console.log(`page: ${req.params.pageNumber}`);
-  const pageSize = 12;
+  const pageSize = 15;
   Film.find(
     searchRequest ? { title: { $regex: new RegExp(searchRequest, "i") } } : {}
   )

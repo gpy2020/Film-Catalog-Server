@@ -65,7 +65,6 @@ router.get(
   "/dashboard",
   passport.authenticate("jwt", { session: false }),
   function(req, res) {
-    console.log("request user: " + req.user);
     res.json({ success: true, user: req.user });
     // res.send(`It works! User id is: ${req.user._id}`);
   }
